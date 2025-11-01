@@ -9,6 +9,7 @@ let nextQuestId = 4;
 let dailyStreak = 0;
 let lastCompletionDate = null; // Stores the date of the last completed quest
 
+// NOTE: These are the default values. They will be overwritten by loadGame() if a save exists.
 let quests = [
     { id: 1, name: "Review Chemistry Topic 1: Atomic Structure", xp: 50, completed: false, subject: "Chemistry" },
     { id: 2, name: "Maths: Complete a full Non-Calculator Past Paper", xp: 100, completed: false, subject: "Maths" },
@@ -67,7 +68,6 @@ function renderQuests() {
     });
 }
 
-// Added this missing function to allow quest deletion
 function deleteQuest(id) {
     if (confirm("Are you sure you want to delete this quest?")) {
         quests = quests.filter(q => q.id !== id);
@@ -167,36 +167,29 @@ function checkStreak() {
         lastDate.setHours(0, 0, 0, 0);
     }
     
-    // Check if a day has passed since the last quest completion
     if (!lastDate || today.getTime() > lastDate.getTime()) {
         const timeDiff = today.getTime() - (lastDate ? lastDate.getTime() : 0);
         const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
         
-        // Use timeDiff to determine if it's the *same* day (less than 24h passed) or next day
         const isSameDay = lastDate && (timeDiff < (1000 * 3600 * 24)) && today.getDate() === lastDate.getDate();
 
         if (dayDiff === 1) {
-            // Consecutive day (exactly one day passed)
             dailyStreak += 1;
             alert(`🔥 Streak maintained! Day ${dailyStreak}!`);
         } else if (dayDiff > 1) {
-            // Streak broken (missed a day)
             dailyStreak = 1; 
             alert(`🥺 Streak reset. Start a new streak today!`);
         } else if (!lastDate || !isSameDay) {
-            // First quest of the day or first ever quest
             dailyStreak = 1; 
             alert(`⭐ Streak started! Day 1!`);
         } 
         
-        // Award streak bonus every 7 days
         if (dailyStreak > 0 && dailyStreak % 7 === 0) {
             focusCoins += 20; 
             alert(`🎁 7-Day Streak Bonus! You earned 20 Focus Coins!`);
         }
     }
     
-    // Update the last completion date to today
     lastCompletionDate = new Date().toISOString().split('T')[0]; 
     updateStatsDisplay();
 }
@@ -204,10 +197,9 @@ function checkStreak() {
 
 // --- Form/Subject Management Logic ---
 
-// Show/Hide the form
+// Show/Hide the ADD QUEST form
 function toggleForm() {
     const form = document.getElementById('add-quest-form');
-    // Toggle the 'visible' class to control display via CSS
     form.classList.toggle('visible'); 
     
     if (form.classList.contains('visible')) {
@@ -239,7 +231,6 @@ function fillSubjectSelect() {
 function addNewQuestFromForm() {
     const newQuestName = document.getElementById('quest-name-input').value.trim();
     const newQuestSubject = document.getElementById('quest-subject-select').value;
-    // CRITICAL: Ensure we get the value before parsing
     const xpInput = document.getElementById('quest-xp-input').value;
     const newQuestXP = parseInt(xpInput);
     
@@ -263,7 +254,7 @@ function addNewQuestFromForm() {
     saveGame();
 }
 
-// NEW FUNCTION: Allow users to add a custom subject
+// Allow users to add a custom subject
 function addCustomSubject() {
     const newSubjectName = prompt("Enter the name of the new subject (e.g., Media Studies):");
     if (newSubjectName && newSubjectName.trim() !== '') {
@@ -280,11 +271,10 @@ function addCustomSubject() {
     }
 }
 
-// NEW FUNCTION: Allow users to delete a subject
+// Allow users to delete a subject
 function deleteSubject(subjectName) {
     if (confirm(`Are you sure you want to delete the subject: ${subjectName}? All its XP will be lost.`)) {
         subjects = subjects.filter(s => s.name !== subjectName);
-        // Also remove any active quests tied to this subject
         quests = quests.filter(q => q.subject !== subjectName); 
         
         renderSubjects();
@@ -296,6 +286,7 @@ function deleteSubject(subjectName) {
 
 
 // --- Store Logic ---
+
 function openStore() {
     let storeMessage = "Welcome to the Reward Store! You have " + focusCoins + " Focus Coins.\n\n";
     storeItems.forEach((item, index) => {
@@ -322,6 +313,40 @@ function openStore() {
     }
 }
 
+// NEW: Show/Hide the custom reward form
+function toggleRewardForm() {
+    const form = document.getElementById('new-reward-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    
+    const mainStoreButton = document.querySelector('button[onclick="openStore()"]');
+    mainStoreButton.style.display = form.style.display === 'block' ? 'none' : 'block';
+
+    const addRewardButton = document.querySelector('button[onclick="toggleRewardForm()"]');
+    addRewardButton.style.display = form.style.display === 'block' ? 'none' : 'block';
+}
+
+// NEW: Process the form input and create a new reward
+function addNewRewardFromForm() {
+    const newRewardName = document.getElementById('reward-name-input').value.trim();
+    const newRewardCost = parseInt(document.getElementById('reward-cost-input').value);
+    
+    if (!newRewardName || isNaN(newRewardCost) || newRewardCost <= 0) {
+        alert("Please enter a valid name and cost.");
+        return;
+    }
+    
+    storeItems.push({
+        name: newRewardName,
+        cost: newRewardCost
+    });
+    
+    document.getElementById('new-reward-form').reset();
+    toggleRewardForm(); 
+    
+    alert(`🎉 Custom Reward "${newRewardName}" added to the store for ${newRewardCost} FC!`);
+    saveGame(); 
+}
+
 
 // --- Persistence Functions (Saving/Loading) ---
 
@@ -332,12 +357,12 @@ function saveGame() {
         xpReq: xpRequired,
         qList: quests,
         sList: subjects,
+        store: storeItems, // NEW: Saving custom store items
         nextID: nextQuestId,
         focus: focusCoins,
         streak: dailyStreak,
         lastDate: lastCompletionDate
     };
-    // CRITICAL: Saves data to the browser's storage
     localStorage.setItem('gcseStudyQuest', JSON.stringify(gameState)); 
 }
 
@@ -348,8 +373,10 @@ function loadGame() {
         userXP = gameState.xp;
         userLevel = gameState.level;
         xpRequired = gameState.xpReq;
-        quests = gameState.qList;
-        subjects = gameState.sList;
+        // Use the saved arrays, or default to the original if corrupted/missing
+        quests = gameState.qList || quests; 
+        subjects = gameState.sList || subjects;
+        storeItems = gameState.store || storeItems; // NEW: Loading custom store items
         nextQuestId = gameState.nextID;
         focusCoins = gameState.focus || 0;
         dailyStreak = gameState.streak || 0;
@@ -357,7 +384,7 @@ function loadGame() {
     }
 }
 
-// CRITICAL FIX: The function that runs everything when the page loads!
+// CRITICAL: The function that runs everything when the page loads!
 function init() {
     loadGame();
     updateStatsDisplay();
