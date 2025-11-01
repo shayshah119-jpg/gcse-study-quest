@@ -1,52 +1,66 @@
-<header>
-    <h1>The GCSE Study Quest</h1>
-</header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The GCSE Study Quest</title>
+        <link rel="stylesheet" href="./style.css"> 
+</head>
+<body>
 
-<main>
-    <div id="stats-panel">
-        <h2>Current Stats:</h2>
-        <p>Level: <span id="level">1</span></p>
-        <p>XP: <span id="xp">0</span> / <span id="xp-to-next">100</span></p>
-        <progress id="xp-bar" value="0" max="100"></progress>
-        <p>💰 Focus Coins: <span id="focus-coins">0</span></p> 
-        <p>🔥 Daily Streak: <span id="daily-streak">0</span> Days</p> 
-    </div>
+    <header>
+        <h1>The GCSE Study Quest</h1>
+    </header>
 
-    <div id="quest-log">
-        <h2>🎯 Active Study Quests</h2>
-        <ul id="quest-list">
-            </ul>
-        <button onclick="toggleForm()">Add New Quest</button>
-        
-        <form id="add-quest-form" onsubmit="event.preventDefault(); addNewQuestFromForm();">
-            <h3>Create New Quest:</h3>
-            <label for="quest-name-input">Quest Name:</label>
-            <input type="text" id="quest-name-input" required placeholder="e.g., Physics Practice Paper">
-            
-            <label for="quest-subject-select">Subject:</label>
-            <select id="quest-subject-select" required>
-                <option value="" disabled selected>Select a Subject</option>
-            </select>
-            
-            <label for="quest-xp-input">XP Reward:</label>
-            <input type="number" id="quest-xp-input" required min="1" placeholder="50">
-            
-            <div class="form-actions">
-                <button type="submit">Submit Quest</button>
-                <button type="button" onclick="toggleForm()">Cancel</button>
-            </div>
-        </form>
-    </div>
+    <main>
+        <div id="stats-panel">
+            <h2>Current Stats:</h2>
+            <p>Level: <span id="level">1</span></p>
+            <p>XP: <span id="xp">0</span> / <span id="xp-to-next">100</span></p>
+            <progress id="xp-bar" value="0" max="100"></progress>
+            <p>💰 Focus Coins: <span id="focus-coins">0</span></p> 
+            <p>🔥 Daily Streak: <span id="daily-streak">0</span> Days</p> 
+        </div>
+
+        <div id="quest-log">
+            <h2>🎯 Active Study Quests</h2>
+            <ul id="quest-list">
+                </ul>
+            <button onclick="toggleForm()">Add New Quest</button>
+            
+            <form id="add-quest-form" onsubmit="event.preventDefault(); addNewQuestFromForm();">
+                <h3>Create New Quest:</h3>
+                <label for="quest-name-input">Quest Name:</label>
+                <input type="text" id="quest-name-input" required placeholder="e.g., Physics Practice Paper">
+                
+                <label for="quest-subject-select">Subject:</label>
+                <select id="quest-subject-select" required>
+                    <option value="" disabled selected>Select a Subject</option>
+                </select>
+                
+                <label for="quest-xp-input">XP Reward:</label>
+                <input type="number" id="quest-xp-input" required min="1" placeholder="50">
+                
+                <div class="form-actions">
+                    <button type="submit">Submit Quest</button>
+                    <button type="button" onclick="toggleForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+        
+        <div id="subject-tracker">
+            <h2>📘 Subject Mastery</h2>
+            <button onclick="addCustomSubject()">+ Add New Subject</button>
+            <ul id="subject-list">
+                </ul>
+        </div>
+        
+        <div style="width: 100%; text-align: center; margin-top: 30px;">
+            <button onclick="openStore()">Visit Reward Store 🛒</button>
+        </div>
+    </main>
     
-    <div id="subject-tracker">
-        <h2>📘 Subject Mastery</h2>
-        <button onclick="addCustomSubject()">+ Add New Subject</button>
-        <ul id="subject-list">
-            </ul>
-    </div>
-    
-    <div style="width: 100%; text-align: center; margin-top: 30px;">
-        <button onclick="openStore()">Visit Reward Store 🛒</button>
-    </div>
+    <script src="./script.js"></script> 
 
-</main>
+</body>
+</html>
