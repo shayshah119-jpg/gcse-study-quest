@@ -59,9 +59,25 @@
             <button onclick="openStore()">Visit Reward Store 🛒</button>
         </div>
 
-    </main>
+        <div id="add-reward-section" style="width: 100%; text-align: center; margin-top: 15px;">
+            <button onclick="toggleRewardForm()">+ Add Custom Reward</button>
+
+            <form id="new-reward-form" onsubmit="event.preventDefault(); addNewRewardFromForm();" style="display:none; padding: 15px; border: 1px solid var(--panel-border); border-radius: 8px; margin-top: 10px;">
+                <h3>New Personal Reward:</h3>
+                <label for="reward-name-input">Reward Name:</label>
+                <input type="text" id="reward-name-input" required placeholder="e.g., Pizza Night">
+                
+                <label for="reward-cost-input">Focus Coin Cost:</label>
+                <input type="number" id="reward-cost-input" required min="1" placeholder="30">
+                
+                <div class="form-actions" style="margin-top: 10px;">
+                    <button type="submit">Add Reward</button>
+                    <button type="button" onclick="toggleRewardForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+        </main>
 
     <script src="./script.js"></script> 
-
 </body>
 </html>
