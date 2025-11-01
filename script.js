@@ -54,16 +54,26 @@ function renderQuests() {
         
         listItem.innerHTML = `
             <input type="checkbox" 
-                   id="quest-${quest.id}" 
-                   onchange="completeQuest(${quest.id})"
-                   ${quest.completed ? 'checked disabled' : ''}>
+                    id="quest-${quest.id}" 
+                    onchange="completeQuest(${quest.id})"
+                    ${quest.completed ? 'checked disabled' : ''}>
             <label for="quest-${quest.id}">
                 ${quest.name} 
                 <span class="xp-badge">(+${quest.xp} XP)</span>
             </label>
+            <button class="delete-quest" onclick="deleteQuest(${quest.id})">🗑️</button>
         `;
         listElement.appendChild(listItem);
     });
+}
+
+// Added this missing function to allow quest deletion
+function deleteQuest(id) {
+    if (confirm("Are you sure you want to delete this quest?")) {
+        quests = quests.filter(q => q.id !== id);
+        renderQuests();
+        saveGame();
+    }
 }
 
 function renderSubjects() {
@@ -162,29 +172,31 @@ function checkStreak() {
         const timeDiff = today.getTime() - (lastDate ? lastDate.getTime() : 0);
         const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
         
+        // Use timeDiff to determine if it's the *same* day (less than 24h passed) or next day
+        const isSameDay = lastDate && (timeDiff < (1000 * 3600 * 24)) && today.getDate() === lastDate.getDate();
+
         if (dayDiff === 1) {
-            // Consecutive day
+            // Consecutive day (exactly one day passed)
             dailyStreak += 1;
             alert(`🔥 Streak maintained! Day ${dailyStreak}!`);
         } else if (dayDiff > 1) {
             // Streak broken (missed a day)
             dailyStreak = 1; 
             alert(`🥺 Streak reset. Start a new streak today!`);
-        } else {
-            // First quest of the day
+        } else if (!lastDate || !isSameDay) {
+            // First quest of the day or first ever quest
             dailyStreak = 1; 
             alert(`⭐ Streak started! Day 1!`);
-        }
+        } 
         
         // Award streak bonus every 7 days
         if (dailyStreak > 0 && dailyStreak % 7 === 0) {
             focusCoins += 20; 
             alert(`🎁 7-Day Streak Bonus! You earned 20 Focus Coins!`);
         }
-
     }
     
-    // Update the last completion date to today (or later today if needed)
+    // Update the last completion date to today
     lastCompletionDate = new Date().toISOString().split('T')[0]; 
     updateStatsDisplay();
 }
@@ -195,6 +207,7 @@ function checkStreak() {
 // Show/Hide the form
 function toggleForm() {
     const form = document.getElementById('add-quest-form');
+    // Toggle the 'visible' class to control display via CSS
     form.classList.toggle('visible'); 
     
     if (form.classList.contains('visible')) {
@@ -226,7 +239,9 @@ function fillSubjectSelect() {
 function addNewQuestFromForm() {
     const newQuestName = document.getElementById('quest-name-input').value.trim();
     const newQuestSubject = document.getElementById('quest-subject-select').value;
-    const newQuestXP = parseInt(document.getElementById('quest-xp-input').value);
+    // CRITICAL: Ensure we get the value before parsing
+    const xpInput = document.getElementById('quest-xp-input').value;
+    const newQuestXP = parseInt(xpInput);
     
     if (!newQuestName || !newQuestSubject || isNaN(newQuestXP) || newQuestXP <= 0) {
         alert("Please ensure all fields are filled out correctly.");
@@ -317,4 +332,38 @@ function saveGame() {
         xpReq: xpRequired,
         qList: quests,
         sList: subjects,
-        nextID:
+        nextID: nextQuestId,
+        focus: focusCoins,
+        streak: dailyStreak,
+        lastDate: lastCompletionDate
+    };
+    // CRITICAL: Saves data to the browser's storage
+    localStorage.setItem('gcseStudyQuest', JSON.stringify(gameState)); 
+}
+
+function loadGame() {
+    const savedState = localStorage.getItem('gcseStudyQuest');
+    if (savedState) {
+        const gameState = JSON.parse(savedState);
+        userXP = gameState.xp;
+        userLevel = gameState.level;
+        xpRequired = gameState.xpReq;
+        quests = gameState.qList;
+        subjects = gameState.sList;
+        nextQuestId = gameState.nextID;
+        focusCoins = gameState.focus || 0;
+        dailyStreak = gameState.streak || 0;
+        lastCompletionDate = gameState.lastDate || null;
+    }
+}
+
+// CRITICAL FIX: The function that runs everything when the page loads!
+function init() {
+    loadGame();
+    updateStatsDisplay();
+    renderQuests();
+    renderSubjects();
+}
+
+// This command starts the entire game setup process as soon as the HTML is ready
+document.addEventListener('DOMContentLoaded', init);
